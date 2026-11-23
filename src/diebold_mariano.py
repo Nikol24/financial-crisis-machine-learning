@@ -21,7 +21,7 @@ INDEX_NAME = "NIKKEI 225"
 DATA_FILE = DATA_DIR / "NIKKEI 225.xlsx"
 
 SEQUENCE_LENGTH = 10
-TEST_SIZE = 30
+TEST_SIZE = 120
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -208,28 +208,53 @@ results["Loss_Difference"] = (
 )
 
 
+
 # Step 7: Diebold-Mariano test
-# One-step forecasts: lag-0 variance estimator
+# HAC variance with Bartlett weights
+
 d = results["Loss_Difference"].to_numpy()
 
 T = len(d)
 mean_difference = np.mean(d)
-variance_difference = np.var(d, ddof=1)
 
-if not np.isfinite(variance_difference):
-    raise ValueError("Invalid loss variance.")
+# Newey-West variance estimation
+lag = 5
+centered_d = d - mean_difference
 
-if variance_difference <= 0:
+gamma_0 = np.dot(
+    centered_d, centered_d
+) / T
+
+long_run_variance = gamma_0
+
+for k in range(1, min(lag, T - 1) + 1):
+    autocovariance = np.dot(
+        centered_d[k:],
+        centered_d[:-k]
+    ) / T
+
+    weight = 1 - k / (lag + 1)
+
+    long_run_variance += (
+        2 * weight * autocovariance
+    )
+
+if not np.isfinite(long_run_variance):
     raise ValueError(
-        "Cannot calculate DM statistic: "
-        "loss differences have zero variance."
+        "Invalid long-run variance estimate."
+    )
+
+if long_run_variance <= 0:
+    raise ValueError(
+        "Cannot calculate DM statistic."
     )
 
 dm_statistic = mean_difference / np.sqrt(
-    variance_difference / T
+    long_run_variance / T
 )
 
 p_value = 2 * norm.sf(abs(dm_statistic))
+
 
 
 # Step 8: Display results
