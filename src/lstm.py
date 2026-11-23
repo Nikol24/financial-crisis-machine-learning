@@ -214,19 +214,55 @@ plt.savefig(
 
 plt.show()
 
+# Step 10: Train final model on all available data
 
-# Step 10: Forecast the next trading observation
-last_sequence = scaled_data[-LOOKBACK:]
+# Keep the test evaluation above unchanged.
+# Fit a new scaler and model for the final forecast.
 
-X_future = last_sequence.reshape(
-    1, LOOKBACK, 1
+final_scaler = MinMaxScaler(feature_range=(0, 1))
+final_scaled = final_scaler.fit_transform(data)
+
+X_full = []
+y_full = []
+
+for i in range(LOOKBACK, len(final_scaled)):
+    X_full.append(final_scaled[i-LOOKBACK:i])
+    y_full.append(final_scaled[i])
+
+X_full = np.array(X_full)
+y_full = np.array(y_full)
+
+final_model = Sequential([
+    Input(shape=(LOOKBACK, 1)),
+    LSTM(50, return_sequences=True),
+    LSTM(50),
+    Dense(25),
+    Dense(1)
+])
+
+final_model.compile(
+    optimizer="adam",
+    loss="mean_squared_error"
 )
 
-future_scaled = model.predict(
+final_model.fit(
+    X_full,
+    y_full,
+    epochs=30,
+    batch_size=32,
+    shuffle=False,
+    verbose=1
+)
+
+# Forecast the next trading observation
+last_sequence = final_scaled[-LOOKBACK:]
+X_future = last_sequence.reshape(1, LOOKBACK, 1)
+
+future_scaled = final_model.predict(
     X_future, verbose=0
 )
 
-future_prediction = scaler.inverse_transform(
+future_prediction = final_scaler.inverse_transform(
     future_scaled
 )
 
