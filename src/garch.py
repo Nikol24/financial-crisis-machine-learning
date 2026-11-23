@@ -4,7 +4,8 @@ from pathlib import Path
 from arch import arch_model
 
 # Load historical stock market data
-file_path = Path("data") / "^ATG_data_final.xlsx"
+file_path = Path(__file__).resolve().parent.parent / "data" / "ATHEX.xlsx"
+
 
 if not file_path.exists():
     raise FileNotFoundError(
