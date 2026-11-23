@@ -1,3 +1,27 @@
+"""
+Dynamic Conditional Correlation (DCC) Analysis
+
+This implementation calculates time-varying correlations
+between the S&P 500 and NIKKEI 225 stock market indices.
+
+GARCH(1,1) models are fitted to individual return series.
+The standardized residuals are then used to calculate
+the dynamic Q_t matrices and correlation coefficients.
+
+The DCC parameters alpha=0.01 and beta=0.98 are fixed,
+following the original research implementation.
+
+These parameters are not estimated through
+maximum likelihood optimization.
+
+This script demonstrates the DCC correlation recursion
+and should not be interpreted as a fully estimated
+DCC-GARCH model.
+
+Author: Nikoleta Kostea
+Research: MSc Thesis, 2025
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
