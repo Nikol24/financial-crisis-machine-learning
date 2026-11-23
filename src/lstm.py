@@ -123,28 +123,50 @@ predictions = scaler.inverse_transform(
 actual = scaler.inverse_transform(y_test)
 
 
+
 # Step 7: Evaluate model performance
-mae = mean_absolute_error(
-    actual, predictions
-)
+
+# LSTM evaluation
+mae = mean_absolute_error(actual, predictions)
 
 rmse = np.sqrt(
     mean_squared_error(actual, predictions)
 )
 
-# Naive baseline: tomorrow equals today's close
+# Naive baseline:
+# Next closing price = previous closing price
 naive_predictions = data[split-1:-1]
 
 naive_mae = mean_absolute_error(
     actual, naive_predictions
 )
 
-print("\nLSTM Forecasting Results")
-print("------------------------")
-print(f"MAE: {mae:.4f}")
-print(f"RMSE: {rmse:.4f}")
-print(f"Naive Baseline MAE: {naive_mae:.4f}")
+naive_rmse = np.sqrt(
+    mean_squared_error(actual, naive_predictions)
+)
 
+# Calculate relative MAE improvement
+improvement = (
+    (naive_mae - mae) / naive_mae
+) * 100 if naive_mae > 0 else np.nan
+
+print("\nLSTM Forecasting Evaluation")
+print("--------------------------------")
+
+print(f"LSTM MAE: {mae:.4f}")
+print(f"LSTM RMSE: {rmse:.4f}")
+
+print(f"Naive MAE: {naive_mae:.4f}")
+print(f"Naive RMSE: {naive_rmse:.4f}")
+
+print(f"MAE Improvement: {improvement:.2f}%")
+
+if mae < naive_mae:
+    print("LSTM outperforms the naive baseline (MAE).")
+elif mae > naive_mae:
+    print("Naive baseline outperforms LSTM (MAE).")
+else:
+    print("Both models have equal MAE.")
 
 # Step 8: Save predictions
 test_dates = df["Date"].iloc[split:]
